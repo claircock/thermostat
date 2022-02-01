@@ -1,0 +1,43 @@
+import time
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+W = 12
+G = 18
+O = 20
+Y = 25
+
+GPIO.setup(W, GPIO.OUT)
+GPIO.setup(G, GPIO.OUT)
+GPIO.setup(O, GPIO.OUT)
+
+GPIO.setup(Y, GPIO.OUT)
+
+
+
+print("AUTO mode")
+ctemp = int(input("What is the current temperature? "))
+stemp = int(input("What temp would you like it to be? "))
+
+newtemp = stemp - ctemp
+
+if newtemp >= 3 :
+	print("heating mode")
+	GPIO.output(G, True)
+	GPIO.output(Y, True)
+elif newtemp <= -3 :
+	print("cooling  mode")
+	GPIO.output(G,True)
+	GPIO.output(Y,True)
+	GPIO.output(O, True)
+
+pressenter = input("system now waiting for next cycle, press enter")
+
+print(pressenter)
+GPIO.output(G,False)
+GPIO.output(Y,False)
+GPIO.output(O, False)
+
+
+
+GPIO.cleanup()
