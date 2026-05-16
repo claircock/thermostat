@@ -1,11 +1,17 @@
 import Adafruit_DHT
 import time
+import datetime
 import RPi.GPIO as GPIO
 from math import *
 import signal
 import sys
 import os
 from tkinter import *
+import dht11
+
+#welcome to CKTEMP
+
+#18!!! its going to be sick!!!!
 
 
 #enter this at the begining of code when working with tkinter
@@ -21,11 +27,11 @@ e.insert(0, "Press clear then enter new setpoint")
 e.grid(row=0, column=0, columnspan=3, padx=10, pady=10)
 
 
-
 def button_click(number):
 	current = e.get()
 	e.delete(0, END)
 	e.insert(0, str(current) + str(number))
+
 
 #clear previous number
 def button_clear():
@@ -56,7 +62,18 @@ def temp_ent() : #button_enter - button updates stemp
 	stemp = int(e.get())
 	e.delete(0, END)
 	e.insert(0, "New setpoint updated. please select mode")
-	print("\nNew setpoint: " + str(stemp))
+	print("\nRoom temperature Setpoint: " + str(stemp) + "ºF")
+
+def temp_up():
+	global stemp
+	stemp += 1
+	print("setpoint: " + str(stemp))
+
+
+def temp_down():
+	global stemp
+	stemp -= 1
+	print("setpoint: " + str(stemp))
 
 button_1 = Button(root, text="1", padx=40, pady=20, command=lambda: button_click(1))
 button_2 = Button(root, text="2", padx=40, pady=20, command=lambda: button_click(2))
@@ -71,6 +88,11 @@ button_0 = Button(root, text="0", padx=40, pady=20, command=lambda: button_click
 button_enter = Button(root, text="Enter", bg="green", padx=28, pady=20, command=temp_ent)
 button_clear = Button(root, text="clear", padx=28, pady=20, command=button_clear)
 sys_restart = Button(root, text="System \nrestart", padx=17, pady=20, command=sys_restart)
+button_temp_up = Button(root, text="+", padx=28, pady=20, command=temp_up)
+button_temp_down = Button(root, text="-", padx=28, pady=20, command=temp_down)
+
+thermostat_text = Text(root, width=40, height=8, font=("Helvetica", 16))
+
 
 # put the buttons on the screen
 button_1.grid(row=3, column=0)
@@ -87,13 +109,19 @@ button_0.grid(row=4, column=0)
 button_enter.grid(row=4, column=2)
 button_clear.grid(row=4, column=1)
 sys_restart.grid(row=5,column=0)
+button_temp_up.grid(row=5,column=2)
+button_temp_down.grid(row=5, column=1)
 
-#DHT11 setup
-DHT_SENSOR = Adafruit_DHT.DHT11
-DHT_PIN = 4
-humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+#DHT11 setup EDIT OG
+#DHT_SENSOR = Adafruit_DHT.DHT11
+#DHT_PIN = 4
+#humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
+
+#NEW DHT SETUP
+
 
 #my variable gpio pin assignments
+
 
 #using adafruitDHT code convert to a temp in C and F 
 ctemp = '{0:0.1f}'.format(temperature)
@@ -117,14 +145,17 @@ def set_temp() :
 def pin24_handler(pin):
 	while True :
 		try :
+			print("Heat mode activated")
+			time.sleep(5)
 			DHT_SENSOR = Adafruit_DHT.DHT11
 			DHT_PIN = 4
 			humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, DHT_PIN)
 			ctemp2 = '{0:0.1f}'.format(temperature)
 			ftemp2 = floor(float(ctemp2)*1.8) + 32
 			tempdif2 = stemp - int(ftemp2)
+			time.sleep(1)
 
-			print("\nHeating mode activated. \nCurrent temperature: " + str(ftemp2) + "° Fahrenheit")
+			print("\nCurrent temperature: " + str(ftemp2) + "° Fahrenheit")
 			print("Room setpoint: " + str(stemp) + "° Fahrenheit")
 			time.sleep(10)
 			if tempdif2 > 0 :
@@ -142,7 +173,7 @@ def pin24_handler(pin):
 		except :
 			print("\nNo responce from DHT")
 			pin24_handler
-			time.sleep(5)
+			time.sleep(15)
 #global pin23_handler
 def pin23_handler(pin):
 	while True :
@@ -173,7 +204,7 @@ def pin23_handler(pin):
 		except :
 			print("\nNo responce from DHT")
 			pin24_handler
-			time.sleep(5)
+			time.sleep(15)
 #global pin13_handler
 def pin13_handler(pin) :
 	while True :
@@ -201,11 +232,20 @@ def pin13_handler(pin) :
 		except :
 			print("\nNo responce from DHT")
 			pin24_handler
-			time.sleep(5)
+			time.sleep(15)
 
-
+fan_sig = 0
 def pin16_handler(pin) :
-	print("shits not working")
+	global fan_sig
+	fan_sig += 1
+	if fan_sig == 1 :
+		GPIO.output(G, True)
+		print("Fan On")
+	elif fan_sig > 1 :
+		GPIO.output(G, False)
+		print("Fan off")
+		fan_sig = 0
+
 
 #def time_1():
 #	time.sleep(10)
